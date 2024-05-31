@@ -1,9 +1,10 @@
 import botconfig
+from typing import Union
 from utils.db import AsyncSQLiteDB
 
 db = AsyncSQLiteDB(botconfig.db_path)
 
-async def check_if_team_leader(author) -> Optional[str]:
+async def check_if_team_leader(author) -> Union[str, None]:
     try:
         check_if_team_leader_query = "SELECT team_name FROM team WHERE team_leader = ?"
         params = (author,)
