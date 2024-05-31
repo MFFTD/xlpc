@@ -45,7 +45,7 @@ class Confirm(discord.ui.View):
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.invited_user_id:
             return
-        
+        # Stop listening for further interactions
         self.stop()
         self.value = False
         self.children[1].disabled = True
@@ -57,24 +57,21 @@ class Confirm(discord.ui.View):
 class Invite(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.db = AsyncSQLiteDB(botconfig.db_path)
-
+        
     # Slash command
     # Can be used in discord with typing /invite
     @app_commands.command(name="invite", description="Invite users to your team")
     async def invite_to_team(self, interaction: discord.Interaction, user: discord.Member):
-        
         if user == interaction.user:
             await interaction.response.send_message("You should not invite yourself. Ask a team leader to invite you incase you wish to join a team.", ephemeral=True)
             return
 
         try:
-            result = await check_if_team_leader(self.db, interaction.user.id)
-            team_name = result[0][1] # This should probably be done at the check_if_team_leader function
+            team_name = await check_if_team_leader(interaction.user.id)
         except Exception as e:
             print(f"Error in invite(Checking if user is a team leader): {e}")
         
-        if not result:
+        if not team_name:
             await interaction.response.send_message("You are not a team leader.")
             return
         
