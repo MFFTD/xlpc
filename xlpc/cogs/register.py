@@ -3,7 +3,6 @@ import discord
 import botconfig
 from discord.ext import commands
 from discord import app_commands
-from utils.db import AsyncSQLiteDB
 from utils.team_utils import check_if_team_leader
 
 # This class is used to handle register-related commands and interactions
