@@ -4,12 +4,12 @@ import botconfig
 from discord.ext import commands
 from discord import app_commands
 from utils.db import AsyncSQLiteDB
+from utils.team_utils import check_if_team_leader
 
 # This class is used to handle register-related commands and interactions
 class Register(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.db = AsyncSQLiteDB(botconfig.db_path)
     
     @app_commands.command(name="register_team", description="Register a new team")
     async def register(self, interaction: discord.Interaction, team_name: str):
@@ -21,19 +21,15 @@ class Register(commands.Cog):
         if role_exists:
             await interaction.response.send_message(f"Team with the name `{team_name}` already exists.")
             return
-        
+
         try:
-            check_if_team_leader_query = "SELECT team_leader, team_name FROM team WHERE team_leader = ?"
-            params = (interaction.user.id,)
-            result = await self.db.execute_query(check_if_team_leader_query, params, fetchall=True)
+            team_name = await check_if_team_leader(interaction.user.id)
         except Exception as e:
-            await interaction.response.send_message("Error registering a team", ephemeral=True)
-            print(f"Error inviting user to the team: {e}")
-            return
+            print(f"Error in invite(Checking if user is a team leader): {e}")
         
-        if result:
-            print("You are already a leader of a team, you can be only leader of 1 team.", ephemeral=True)
-            return
+        if team_name:
+            await interaction.response.send_message(f"You are already the leader of the team {team_name}.\nYou can only be the leader of one team.", ephemeral=True)
+            return            
         
         try:
             insert_a_new_team_query = "INSERT INTO team (team_name, team_leader) VALUES (?, ?)"
